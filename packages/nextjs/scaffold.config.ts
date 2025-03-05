@@ -1,4 +1,5 @@
 import * as chains from "wagmi/chains";
+import { Chain } from "wagmi";
 
 export type ScaffoldConfig = {
   targetNetwork: chains.Chain;
@@ -11,7 +12,31 @@ export type ScaffoldConfig = {
 
 const scaffoldConfig = {
   // The network where your DApp lives in
-  targetNetwork: chains.optimism,
+  targetNetwork: {
+    id: 97,
+    name: "bnbTestnet",
+    network: "bnbTestnet",
+    nativeCurrency: {
+      name: "tBNB",
+      symbol: "tBNB",
+      decimals: 18,
+    },
+    rpcUrls: {
+      default: {
+        http: ["https://data-seed-prebsc-1-s1.binance.org:8545"],
+      },
+      public: {
+        http: ["https://data-seed-prebsc-1-s1.binance.org:8545"],
+      },
+    },
+    blockExplorers: {
+      default: {
+        name: "BNBScan",
+        url: "https://testnet.bsctrace.com",
+      },
+    },
+    testnet: true,
+  } as Chain,
 
   // The interval at which your front-end polls the RPC servers for new data
   // it has no effect on the local network

@@ -1,10 +1,11 @@
-# 🏗 Bodhi AI Explorer
+# 🏗 CRW DApp
 
 <h4 align="center">
-  <a href="https://smart-contract-explorer.movespace.xyz/"> -[ Lanuch App ]- </a>
+  <a href="https://crw-leeduckgos-projects.vercel.app/"> -[ Lanuch App ]- </a>
 </h4>
 
-🧪 Bodhi AI Explorer 是一个基于向量化数据和智能合约的 Bodhi 内容搜索和去中心化内容标注 App。
+
+🧪CRW 是一个对数据进行 CRW（create-read-write） 操作的 dApp
 
 &
 
@@ -13,7 +14,7 @@ It's a spec version of NonceGeek for `scaffold-eth`.
 
 ## Quickstart
 
-如果您想快速体验我们的功能请通过：<a href="https://bodhi.movespace.xyz/">Lanuch App</a>
+如果您想快速体验我们的功能请通过：<a href="https://crw-leeduckgos-projects.vercel.app/">Lanuch App</a>
 
 ## Frontend
 ### Requirements
@@ -29,7 +30,7 @@ To get started with Bodhi AI Explorer, follow the steps below:
 1. Clone this repo & install dependencies
 
 ```
-git clone https://github.com/NonceGeek/ai-based-smart-contract-explorer.git
+git clone https://github.com/NonceGeek/.git
 cd ai-based-smart-contract-explorer
 yarn install
 ```
@@ -63,10 +64,3 @@ Run smart contract test with `yarn hardhat:test`
 - Edit your smart contract `VectorDBProposalGovernancer.sol` in `packages/hardhat/contracts`
 - Edit your frontend in `packages/nextjs/pages`
 - Edit your deployment scripts in `packages/hardhat/deploy`
-
-
-
-## Architecture
-
-`TODO`
-
