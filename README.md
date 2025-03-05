@@ -30,8 +30,8 @@ To get started with Bodhi AI Explorer, follow the steps below:
 1. Clone this repo & install dependencies
 
 ```
-git clone https://github.com/NonceGeek/.git
-cd ai-based-smart-contract-explorer
+git clone https://github.com/NonceGeek/crw-dapp.git
+cd crw-dapp
 yarn install
 ```
 
