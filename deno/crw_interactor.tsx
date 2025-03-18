@@ -13,6 +13,9 @@ import { oakCors } from "https://deno.land/x/cors/mod.ts";
 
 // for ether
 import { ethers } from "https://cdn.skypack.dev/ethers@5.6.8";
+// yarn add tronweb is successful, import tronweb, without use skypack
+import TronWeb from "https://esm.sh/tronweb@4.0.0";
+
 
 // import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // import { render } from "@deno/gfm";
@@ -208,13 +211,12 @@ const scaffoldConfig = {
   walletAutoConnect: true,
 };
 
-
 const docs = `# CRW Interactor API Documentation
 
 This document provides details for all available endpoints in the CRW Interactor API.
 
 ## Base URL
-All endpoints are relative to the base URL where the service is hosted, typically \`http://localhost:8000\`.
+All endpoints are relative to the base URL where the service is hosted, typically \`https://crw-interactor.deno.dev\`.
 
 ## Endpoints
 
@@ -223,7 +225,7 @@ Returns a simple status message to confirm the API is running.
 
 **Example:**
 \`\`\`bash
-curl http://localhost:8000/
+curl https://crw-interactor.deno.dev/
 \`\`\`
 
 **Response:**
@@ -233,13 +235,21 @@ curl http://localhost:8000/
 }
 \`\`\`
 
+### GET /docs
+Returns the full API documentation.
+
+**Example:**
+\`\`\`bash
+curl https://crw-interactor.deno.dev/docs
+\`\`\`
+
 
 ### GET /admin_gen
 Generates a new admin account with an Ethereum address and private key. Only creates a new admin if one doesn't already exist.
 
 **Example:**
 \`\`\`bash
-curl http://localhost:8000/admin_gen
+curl https://crw-interactor.deno.dev/admin_gen
 \`\`\`
 
 **Response (success - new admin created):**
@@ -264,7 +274,7 @@ Generates a new Ethereum account and stores it in the KV store.
 
 **Example:**
 \`\`\`bash
-curl http://localhost:8000/acct_gen
+curl https://crw-interactor.deno.dev/acct_gen
 \`\`\`
 
 **Response:**
@@ -278,7 +288,7 @@ Retrieves the admin account with its current balance.
 
 **Example:**
 \`\`\`bash
-curl http://localhost:8000/admin_get_with_balance
+curl https://crw-interactor.deno.dev/admin_get_with_balance
 \`\`\`
 
 **Response (success):**
@@ -305,7 +315,7 @@ Returns a list of all account addresses stored in the system.
 
 **Example:**
 \`\`\`bash
-curl http://localhost:8000/accts_get
+curl https://crw-interactor.deno.dev/accts_get
 \`\`\`
 
 **Response:**
@@ -323,7 +333,7 @@ Returns all accounts with their current balances.
 
 **Example:**
 \`\`\`bash
-curl http://localhost:8000/accts_get_with_balances
+curl https://crw-interactor.deno.dev/accts_get_with_balances
 \`\`\`
 
 **Response:**
@@ -346,7 +356,7 @@ Retrieves all data items stored for a specific address.
 
 **Example:**
 \`\`\`bash
-curl http://localhost:8000/read_all/0x123456789abcdef123456789abcdef123456789
+curl https://crw-interactor.deno.dev/read_all/0x123456789abcdef123456789abcdef123456789
 \`\`\`
 
 **Parameters:**
@@ -384,7 +394,7 @@ Returns the current index for a specific address.
 
 **Example:**
 \`\`\`bash
-curl http://localhost:8000/read_index/0x123456789abcdef123456789abcdef123456789
+curl https://crw-interactor.deno.dev/read_index/0x123456789abcdef123456789abcdef123456789
 \`\`\`
 
 **Parameters:**
@@ -411,7 +421,7 @@ Retrieves a specific item by address and index.
 
 **Example:**
 \`\`\`bash
-curl http://localhost:8000/read_item/0x123456789abcdef123456789abcdef123456789/2
+curl https://crw-interactor.deno.dev/read_item/0x123456789abcdef123456789abcdef123456789/2
 \`\`\`
 
 **Parameters:**
@@ -443,7 +453,7 @@ Adds a new record to the blockchain for a specific address. If the address has i
 
 **Example:**
 \`\`\`bash
-curl -X POST http://localhost:8000/record_insert \\
+curl -X POST https://crw-interactor.deno.dev/record_insert \\
   -H "Content-Type: application/json" \\
   -d '{"addr": "0x123456789abcdef123456789abcdef123456789", "record": "Content to be stored on the blockchain"}'
 \`\`\`
@@ -473,6 +483,112 @@ curl -X POST http://localhost:8000/record_insert \\
 }
 \`\`\`
 
+### TRON-Related Endpoints
+
+### GET /trx/tx/:tx_id
+Retrieves transaction details for a TRON transaction.
+
+**Example:**
+\`\`\`bash
+curl https://crw-interactor.deno.dev/trx/tx/123456789abcdef123456789abcdef123456789abcdef123456789abcdef1234
+\`\`\`
+
+**Parameters:**
+- \`tx_id\`: TRON transaction ID (64 character hex string)
+
+**Response (success):**
+\`\`\`json
+{
+  "hash": "0x123456789abcdef123456789abcdef123456789abcdef123456789abcdef1234",
+  "from": "0x123...",
+  "to": "0x456...",
+  "value": 100,
+  "status": "success",
+  "ifToIsTrxAddrActive": true
+}
+\`\`\`
+
+### GET /trx/addr_gen
+Generates a new TRON account.
+
+**Example:**
+\`\`\`bash
+curl https://crw-interactor.deno.dev/trx/addr_gen
+\`\`\`
+
+### GET /trx/balance
+Gets the balance of the active TRON address.
+
+**Example:**
+\`\`\`bash
+curl https://crw-interactor.deno.dev/trx/balance
+\`\`\`
+
+**Response (success):**
+\`\`\`json
+{
+  "addr": "T123...",
+  "balance": 100.5,
+  "before": "T123..."
+}
+\`\`\`
+
+### GET /trx/balance/:trx_addr
+Gets the balance of a specific TRON address.
+
+**Example:**
+\`\`\`bash
+curl https://crw-interactor.deno.dev/trx/balance/T123456789abcdef123456789abcdef123456789
+\`\`\`
+
+**Parameters:**
+- \`trx_addr\`: TRON address to query
+
+**Response (success):**
+\`\`\`json
+{
+  "addr": "T123...",
+  "balance": 100.5,
+  "before": 100.0
+}
+\`\`\`
+
+### GET /trx/trx_addr_insert
+Sets a TRON address as the active address.
+
+**Example:**
+\`\`\`bash
+curl https://crw-interactor.deno.dev/trx/trx_addr_insert?trx_addr=T123456789abcdef123456789abcdef123456789
+\`\`\`
+
+**Query Parameters:**
+- \`trx_addr\`: TRON address to set as active
+
+**Response (success):**
+\`\`\`json
+{
+  "message": "trx_addr inserted successfully"
+}
+\`\`\`
+
+### GET /trx/trx_addrs
+Lists all TRON addresses.
+
+**Example:**
+\`\`\`bash
+curl https://crw-interactor.deno.dev/trx/trx_addrs
+\`\`\`
+
+### GET /trx/trx_addr/:trx_addr
+Gets information about a specific TRON address.
+
+**Example:**
+\`\`\`bash
+curl https://crw-interactor.deno.dev/trx/trx_addr/T123456789abcdef123456789abcdef123456789
+\`\`\`
+
+**Parameters:**
+- \`trx_addr\`: TRON address to query
 
 ## Error Handling
 All endpoints return appropriate HTTP status codes:
@@ -484,7 +600,6 @@ All endpoints return appropriate HTTP status codes:
 ## Authentication
 The API currently uses direct private key access for blockchain transactions. In a production environment, a more secure authentication mechanism should be implemented.
 `;
-
 
 console.log("Hello from CRW Interactor!");
 
@@ -511,7 +626,7 @@ async function genAcct() {
 async function genAdmin() {
   const kv = await Deno.openKv();
   const adminEntries = kv.list({ prefix: ["admin"] });
-  
+
   // Check if admin already exists
   for await (const entry of adminEntries) {
     if (entry.key.length >= 2) {
@@ -531,7 +646,7 @@ async function genAdmin() {
 
 async function getAdmin() {
   const kv = await Deno.openKv();
-  const adminEntries = kv.list({ prefix: ["admin"] });  
+  const adminEntries = kv.list({ prefix: ["admin"] });
   // Extract the first admin entry
   for await (const entry of adminEntries) {
     if (entry.key.length >= 2) {
@@ -539,30 +654,162 @@ async function getAdmin() {
       const privateKey = entry.value as string;
       return {
         address,
-        privateKey
+        privateKey,
       };
     }
   }
-  
+
   return null; // Return null if no admin found
 }
 
+async function getTrxTx(tx_id: string) {
+  try {
+    // Validate transaction ID format (should be 64 characters hex string without 0x prefix)
+    if (!/^[0-9a-fA-F]{64}$/.test(tx_id)) {
+      return {
+        error: "Invalid transaction ID format. Expected 64 character hex string."
+      };
+    }
+
+    const kv = await Deno.openKv();
+    const trx_addr_active = await kv.get(["trx_addr_active"]);
+
+    // Add 0x prefix if not present (required for JSON-RPC calls)
+    const formattedTxId = tx_id.startsWith('0x') ? tx_id : `0x${tx_id}`;
+    
+    // Get the TRON API URL from environment variable or use default
+    const tronApiUrl = Deno.env.get("TRON_API_URL") || "https://api.trongrid.io/jsonrpc";
+    
+    // Make direct RPC calls to get transaction details
+    const txDetailsResponse = await fetch(tronApiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: 64,
+        jsonrpc: "2.0",
+        method: "eth_getTransactionByHash",
+        params: [formattedTxId]
+      })
+    });
+    
+    const txDetailsData = await txDetailsResponse.json();
+    const txDetails = txDetailsData.result;
+    
+    if (!txDetails) {
+      return {
+        error: "Transaction not found"
+      };
+    }
+    
+    // Get transaction receipt to check status
+    const txReceiptResponse = await fetch(tronApiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: 64,
+        jsonrpc: "2.0",
+        method: "eth_getTransactionReceipt",
+        params: [formattedTxId]
+      })
+    });
+    
+    const txReceiptData = await txReceiptResponse.json();
+    const txReceipt = txReceiptData.result;
+    
+    return {
+      hash: txDetails.hash,
+      from: txDetails.from,
+      to: txDetails.to,
+      value: txDetails.value ? parseInt(txDetails.value, 16) / 1000000 : 0, // Convert hex to decimal TRX
+      status: txReceipt ? (txReceipt.status === "0x1" ? "success" : "failed") : "pending",
+      ifToIsTrxAddrActive: txDetails.to?.toLowerCase() === trx_addr_active?.value?.toLowerCase(),
+    //   blockNumber: txDetails.blockNumber ? parseInt(txDetails.blockNumber, 16) : null,
+    //   timestamp: null, // JSONRPC doesn't provide timestamp directly
+    //   gasUsed: txReceipt ? parseInt(txReceipt.gasUsed, 16).toString() : null,
+    //   rawData: {
+    //     txDetails,
+    //     txReceipt
+    //   }
+    };
+  } catch (error) {
+    console.error(`Error fetching transaction ${tx_id}:`, error);
+    return {
+      error: `Failed to fetch transaction: ${error.message}`
+    };
+  }
+}
+
+async function getTrxBalance(addr: string) {
+  try {
+    // Get the TRON API URL from environment variable or use default
+    const tronApiUrl =
+      Deno.env.get("TRON_API_URL") || "https://api.trongrid.io/v1";
+
+    // Call the TRON API to get the balance
+    const response = await fetch(`${tronApiUrl}/accounts/${addr}`, {
+      method: "GET",
+      headers: {
+        accept: "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Check if the request was successful and data exists
+    if (data.success && data.data && data.data.length > 0) {
+      // Extract the balance (in SUN, need to convert to TRX)
+      const balanceInSun = data.data[0].balance || 0;
+      // Convert from SUN to TRX (1 TRX = 1,000,000 SUN)
+      const balanceInTrx = balanceInSun / 1_000_000;
+
+      return {
+        address: addr,
+        balance: balanceInTrx,
+        rawData: data,
+      };
+    } else {
+      return {
+        address: addr,
+        balance: 0,
+        error: "No data found for this address",
+      };
+    }
+  } catch (error) {
+    console.error(`Error fetching TRON balance for ${addr}:`, error);
+    return {
+      address: addr,
+      balance: 0,
+      error: error.message,
+    };
+  }
+}
+
 async function getBalances(accts: string[]) {
-   const addrsAndBalances = await Promise.all(accts.map(async (acct) => {
-        const balance = await provider.getBalance(acct);
-        return {
-          addr: acct, 
-          // Format the balance as a decimal string in ETH units
-          balance: ethers.utils.formatEther(balance)
-        };
-    }))
+  const addrsAndBalances = await Promise.all(
+    accts.map(async (acct) => {
+      const balance = await provider.getBalance(acct);
+      return {
+        addr: acct,
+        // Format the balance as a decimal string in ETH units
+        balance: ethers.utils.formatEther(balance),
+      };
+    })
+  );
   return addrsAndBalances;
 }
 
 async function getAcctWithPriv(addr: string) {
-    const kv = await Deno.openKv();
-    const acct = kv.get(["acct", addr]);
-    return acct;
+  const kv = await Deno.openKv();
+  const acct = kv.get(["acct", addr]);
+  return acct;
 }
 
 async function getAccts() {
@@ -595,25 +842,94 @@ const contractAddress = contracts.contracts.crw.address;
 const provider = new ethers.providers.JsonRpcProvider(
   scaffoldConfig.targetNetwork.rpcUrls.default.http[0]
 );
+// const providerTrx = new ethers.providers.JsonRpcProvider(
+//     Deno.env.get("TRON_API_URL") || "https://api.trongrid.io"
+// );
 
 const contract = new ethers.Contract(contractAddress, contractABI, provider);
 
+// TODO: set passwd to all the api about write op.
 // generate the router based on the contractABI.
 router
-    .get("/docs", async (context) => {
-        context.response.body = docs;
-    })
-    .get("/", (context) => {
+  .get("/docs", async (context) => {
+    context.response.body = docs;
+  })
+  .get("/", (context) => {
     context.response.body = { message: "CRW Interactor API is running" };
   })
-  .get("/admin_gen", async (context) => {
-    const admin = await genAdmin();
-    context.response.body = admin;
+  .get("/trx/tx/:tx_id", async (context) => {
+    const tx_id = context.params.tx_id;
+    const resp = await getTrxTx(tx_id);
+    context.response.body = resp;
   })
-  .get("/acct_gen", async (context) => {
-    const acct = await genAcct();
-    context.response.body = acct.address;
+  .get("/trx/addr_gen", async (context) => {
+    // const resp = await TronWeb.fromUtf8("test");
+    const resp = await TronWeb.createAccount();
+    context.response.body = resp;
   })
+  .get("/trx/balance", async (context) => {
+    const kv = await Deno.openKv();
+    const resp = await kv.get(["trx_addr_active"]);
+    // { key: [ "trx_addr_active" ], value: null, versionstamp: null }
+    if (resp.value) {
+      const trx_addr = resp.value;
+      const resp_2 = await getTrxBalance(trx_addr);
+      await kv.set(["trx_addr", trx_addr], resp_2.balance);
+      context.response.body = {addr: trx_addr, balance: resp_2.balance, before: resp.value };
+    } else {
+      context.response.body = { message: "trx_addr_active is not set" };
+    }
+  })
+  .get("/trx/balance/:trx_addr", async (context) => {
+    const trx_addr = context.params.trx_addr;
+    const resp = await getTrxBalance(trx_addr);
+    let env = context.params.env;
+    // check if the balance is same as the value in the kv.
+    const kv = await Deno.openKv();
+    const kv_balance = await kv.get(["trx_addr", trx_addr]);
+    if (resp.balance !== kv_balance) {
+      // update balance to the latest.
+      await kv.set(["trx_addr", trx_addr], resp.balance);
+    }
+    context.response.body = { addr: trx_addr, balance: resp.balance, before: kv_balance };
+  })
+  // add passwd.
+  .get("/trx/trx_addr_insert", async (context) => {
+    const queryParams = context.request.url.searchParams;
+    const trx_addr = queryParams.get("trx_addr");
+    if (!trx_addr) {
+      context.response.status = 400;
+      context.response.body = { error: "trx_addr is required" };
+      return;
+    }
+    // get balance by the tr
+    const kv = await Deno.openKv();
+    const resp = await getTrxBalance(trx_addr);
+    await kv.set(["trx_addr_active"], trx_addr);
+    await kv.set(["trx_addr", trx_addr], resp.balance);
+    context.response.body = { message: "trx_addr inserted successfully" };
+  })
+  // ↓↓↓ that two api for backup using.
+  .get("/trx/trx_addrs", async (context) => {
+    const kv = await Deno.openKv();
+    const trx_addrs = kv.list({ prefix: ["trx_addr"] });
+    context.response.body = trx_addrs;
+  })
+  .get("/trx/trx_addr/:trx_addr", async (context) => {
+    const trx_addr = context.params.trx_addr;
+    console.log(trx_addr);
+    if (!trx_addr) {
+      context.response.status = 400;
+      context.response.body = { error: "trx_addr is required" };
+      return;
+    }
+    const kv = await Deno.openKv();
+    const resp = await kv.get(["trx_addr", trx_addr]);
+
+    context.response.body = resp;
+  })
+  // ↑↑↑ trx things ↓↓↓ insert things.
+  // TODO: save them private key with encode with password.
   .get("/admin_get_with_balance", async (context) => {
     const admin = await getAdmin();
     if (!admin) {
@@ -708,6 +1024,14 @@ router
       context.response.body = { error: "Failed to read item" };
     }
   })
+  .get("/admin_gen", async (context) => {
+    const admin = await genAdmin();
+    context.response.body = admin;
+  })
+  .get("/acct_gen", async (context) => {
+    const acct = await genAcct();
+    context.response.body = acct.address;
+  })
   .post("/record_insert", async (context) => {
     try {
       // For this endpoint, we'll need a private key to sign the transaction
@@ -716,13 +1040,13 @@ router
       let payload = await context.request.body.text();
       payload = JSON.parse(payload);
       const addr = payload.addr;
-      
+
       // Check the balance of the addr first
       const balance = await provider.getBalance(addr);
       // Get minimum balance from environment variable or use default
       const minBalanceStr = Deno.env.get("EVERY_ADDR_MIN") || "0.001";
       const minBalance = ethers.utils.parseEther(minBalanceStr); // Use env var or default to 0.001 tBNB
-      
+
       // If balance is less than minimum, transfer double that amount from admin
       if (balance.lt(minBalance)) {
         const admin = await getAdmin();
@@ -731,23 +1055,25 @@ router
           context.response.body = { error: "Admin not found" };
           return;
         }
-        
+
         const adminWallet = new ethers.Wallet(admin.privateKey, provider);
         const transferAmount = ethers.utils.parseEther(
           (parseFloat(minBalanceStr) * 2).toString()
         ); // Double the minimum amount
-        
+
         // Send transaction to transfer tBNB
         const tx = await adminWallet.sendTransaction({
           to: addr,
-          value: transferAmount
+          value: transferAmount,
         });
-        
+
         // Wait for transaction to be mined
         await tx.wait();
-        console.log(`Transferred ${transferAmount} tBNB from admin to ${addr}, tx hash: ${tx.hash}`);
+        console.log(
+          `Transferred ${transferAmount} tBNB from admin to ${addr}, tx hash: ${tx.hash}`
+        );
       }
-      
+
       const record = payload.record;
 
       if (!addr || !record) {
@@ -761,7 +1087,7 @@ router
         context.response.body = { error: "Acct not found" };
         return;
       }
-      
+
       const wallet = new ethers.Wallet(acct.value, provider);
       const contractWithSigner = contract.connect(wallet);
 
@@ -770,7 +1096,7 @@ router
 
       context.response.body = {
         success: true,
-        transactionHash: receipt.transactionHash
+        transactionHash: receipt.transactionHash,
       };
     } catch (error) {
       console.error("Error adding item:", error);
