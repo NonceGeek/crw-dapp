@@ -662,6 +662,22 @@ async function getAdmin() {
   return null; // Return null if no admin found
 }
 
+async function set_env_tron_api_url(if_prod: boolean) {
+  const kv = await Deno.openKv();
+  if (if_prod) {
+    // todo: set tron_api_url in the kv.
+    console.log("prod");
+    await kv.set(["env","tron_api_url"], "https://api.trongrid.io/jsonrpc");
+  } else {
+    // todo: set tron_api_url in the kv.
+    console.log("testnet");
+    await kv.set(["env","tron_api_url"], "https://api.shasta.trongrid.io/jsonrpc");
+  }
+
+  return await kv.get(["env","tron_api_url"]);
+}
+
+
 async function getTrxTx(tx_id: string) {
   try {
     // Validate transaction ID format (should be 64 characters hex string without 0x prefix)
@@ -678,7 +694,7 @@ async function getTrxTx(tx_id: string) {
     const formattedTxId = tx_id.startsWith('0x') ? tx_id : `0x${tx_id}`;
     
     // Get the TRON API URL from environment variable or use default
-    const tronApiUrl = Deno.env.get("TRON_API_URL") || "https://api.trongrid.io/jsonrpc";
+    const tronApiUrl = await kv.get(["env","tron_api_url"]) || "https://api.trongrid.io/jsonrpc";
     
     // Make direct RPC calls to get transaction details
     const txDetailsResponse = await fetch(tronApiUrl, {
@@ -856,6 +872,50 @@ router
   })
   .get("/", (context) => {
     context.response.body = { message: "CRW Interactor API is running" };
+  })
+  .get("/set_env_password", async (context) => {
+    const queryParams = context.request.url.searchParams;
+    const password = queryParams.get("password");
+    const password_now_in_param = queryParams.get("password_now");
+    
+    const kv = await Deno.openKv();
+    const password_now = await kv.get(["env","password"]);
+    
+    if(password_now.value == null) {
+      console.log("passwd_now is null");
+      await kv.set(["env","password"], password);
+      context.response.body = { message: "Password set successfully" };
+    }else{
+      console.log("passwd_now is not null");
+      if(password_now_in_param !== password_now.value) {
+        context.response.body = { error: "Invalid password" };
+        return;
+      }else{
+        await kv.set(["env","password"], password);
+        context.response.body = { message: "Password set successfully" };
+      }
+    }
+  })
+  .get("/set_env_tron_api_url", async (context) => {
+    const queryParams = context.request.url.searchParams;
+    const if_prod = queryParams.get("if_prod");
+    const password = queryParams.get("password");
+    // Convert if_prod string to boolean
+    const kv = await Deno.openKv();
+    const passwd = await kv.get(["env","password"]);
+
+    if (password !== passwd.value) {
+      context.response.body = { error: "Invalid password" };
+      return;
+    }
+    const isProd = if_prod === "true" || if_prod === "1" || if_prod === "yes";
+    const resp = await set_env_tron_api_url(isProd);
+    context.response.body = resp.value;
+  })
+  .get("/get_env_tron_api_url", async (context) => {
+    const kv = await Deno.openKv();
+    const resp = await kv.get(["env","tron_api_url"]);
+    context.response.body = resp.value || "https://api.trongrid.io";
   })
   .get("/trx/tx/:tx_id", async (context) => {
     const tx_id = context.params.tx_id;
