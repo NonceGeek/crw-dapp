@@ -786,7 +786,7 @@ async function getTrxUSDTBalance(addr: string) {
       // USDT contract address on TRON
       // if "shasta" in the tronApiUrl, then use the shasta usdt contract address: TG3XXyExBkPp9nzdajDZsozEu4BkaSJozs, else use the mainnet usdt contract address: TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t
       // const usdtContractAddress = tronApiUrl.includes("shasta") ? "TG3XXyExBkPp9nzdajDZsozEu4BkaSJozs" : "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
-      const usdtContractAddress = tronApiUrl.includes("nile") ? "TG3XXyExBkPp9nzdajDZsozEu4BkaSJozs" : "TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf";
+      const usdtContractAddress = tronApiUrl.includes("nile") ? "TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf" : "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
       // Extract USDT balance from trc20 array if it exists
       let usdtBalance = 0;
       const trc20Tokens = data.data[0].trc20;
@@ -979,7 +979,7 @@ router
   .get("/get_env_tron_api_url", async (context) => {
     const kv = await Deno.openKv();
     const resp = await kv.get(["env","tron_api_url"]);
-    context.response.body = resp.value || "https://api.trongrid.io";
+    context.response.body = resp.value || "https://api.trongrid.io/jsonrpc";
   })
   .get("/trx/tx/:tx_id", async (context) => {
     const tx_id = context.params.tx_id;
