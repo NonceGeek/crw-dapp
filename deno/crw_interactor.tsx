@@ -14,8 +14,9 @@ import { oakCors } from "https://deno.land/x/cors/mod.ts";
 // for ether
 import { ethers } from "https://cdn.skypack.dev/ethers@5.6.8";
 // yarn add tronweb is successful, import tronweb, without use skypack
-import TronWeb from "https://esm.sh/tronweb@4.0.0";
+import { TronWeb } from "https://esm.sh/tronweb@6.0.0";
 
+// 💡https://github.com/tronprotocol/tronweb/issues/542
 
 // import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // import { render } from "@deno/gfm";
@@ -671,7 +672,8 @@ async function set_env_tron_api_url(if_prod: boolean) {
   } else {
     // todo: set tron_api_url in the kv.
     console.log("testnet");
-    await kv.set(["env","tron_api_url"], "https://api.shasta.trongrid.io/jsonrpc");
+    await kv.set(["env","tron_api_url"], "https://nile.trongrid.io/jsonrpc");
+    // await kv.set(["env","tron_api_url"], "https://api.shasta.trongrid.io/jsonrpc");
   }
 
   return await kv.get(["env","tron_api_url"]);
@@ -755,6 +757,68 @@ async function getTrxTx(tx_id: string) {
     console.error(`Error fetching transaction ${tx_id}:`, error);
     return {
       error: `Failed to fetch transaction: ${error.message}`
+    };
+  }
+}
+
+async function getTrxUSDTBalance(addr: string) {
+  try {
+    const kv = await Deno.openKv();
+    let tronApiUrl = (await kv.get(["env","tron_api_url"]))?.value || "https://api.trongrid.io/jsonrpc";
+    
+    tronApiUrl = tronApiUrl.replace('/jsonrpc', '') + "/v1";
+    // Call the TRON API to get the account details including TRC20 tokens
+    const response = await fetch(`${tronApiUrl}/accounts/${addr}`, {
+      method: "GET",
+      headers: {
+        accept: "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Check if the request was successful and data exists
+    if (data.success && data.data && data.data.length > 0) {
+      // USDT contract address on TRON
+      // if "shasta" in the tronApiUrl, then use the shasta usdt contract address: TG3XXyExBkPp9nzdajDZsozEu4BkaSJozs, else use the mainnet usdt contract address: TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t
+      // const usdtContractAddress = tronApiUrl.includes("shasta") ? "TG3XXyExBkPp9nzdajDZsozEu4BkaSJozs" : "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
+      const usdtContractAddress = tronApiUrl.includes("nile") ? "TG3XXyExBkPp9nzdajDZsozEu4BkaSJozs" : "TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf";
+      // Extract USDT balance from trc20 array if it exists
+      let usdtBalance = 0;
+      const trc20Tokens = data.data[0].trc20;
+      
+      if (trc20Tokens) {
+        for (const token of trc20Tokens) {
+          if (token[usdtContractAddress]) {
+            // USDT has 6 decimals on TRON
+            usdtBalance = parseInt(token[usdtContractAddress]) / 1_000_000;
+            break;
+          }
+        }
+      }
+
+      return {
+        address: addr,
+        usdtBalance: usdtBalance,
+        rawBalance: usdtBalance * 1_000_000
+      };
+    } else {
+      return {
+        address: addr,
+        usdtBalance: 0,
+        error: "No data found for this address"
+      };
+    }
+  } catch (error) {
+    console.error(`Error fetching USDT balance for ${addr}:`, error);
+    return {
+      address: addr,
+      usdtBalance: 0,
+      error: error.message
     };
   }
 }
@@ -942,16 +1006,19 @@ router
   })
   .get("/trx/balance/:trx_addr", async (context) => {
     const trx_addr = context.params.trx_addr;
-    const resp = await getTrxBalance(trx_addr);
+    const resp = await getTrxUSDTBalance(trx_addr);
+
+    // console.log(await getTrxUSDTBalance(trx_addr));
+    
     let env = context.params.env;
     // check if the balance is same as the value in the kv.
     const kv = await Deno.openKv();
     const kv_balance = await kv.get(["trx_addr", trx_addr]);
-    if (resp.balance !== kv_balance) {
+    if (resp.usdtBalance !== kv_balance) {
       // update balance to the latest.
-      await kv.set(["trx_addr", trx_addr], resp.balance);
+      await kv.set(["trx_addr", trx_addr], resp.usdtBalance);
     }
-    context.response.body = { addr: trx_addr, balance: resp.balance, before: kv_balance };
+    context.response.body = { addr: trx_addr, balance: resp.usdtBalance, before: kv_balance };
   })
   // add passwd.
   .get("/trx/trx_addr_insert", async (context) => {
@@ -988,7 +1055,8 @@ router
 
     context.response.body = resp;
   })
-  // ↑↑↑ trx things ↓↓↓ insert things.
+  // ↑↑↑ trx things 
+  // ↓↓↓ insert things.
   // TODO: save them private key with encode with password.
   .get("/admin_get_with_balance", async (context) => {
     const admin = await getAdmin();
