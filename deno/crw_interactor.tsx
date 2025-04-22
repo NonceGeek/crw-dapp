@@ -759,8 +759,33 @@ async function getTrxTx(tx_id: string) {
       error: `Failed to fetch transaction: ${error.message}`
     };
   }
+} 
+async function getBalanceOfTRC20(addr: string) {
+  let tronWeb = new TronWeb({ fullHost: "https://api.trongrid.io/v1" });
+  let abi = [
+    {
+      'outputs': [{ 'type': 'uint256' }],
+      'constant': true,
+      'inputs': [{ 'name': 'who', 'type': 'address' }],
+      'name': 'balanceOf',
+      'stateMutability': 'View',
+      'type': 'Function'
+    },
+    {
+      'outputs': [{ 'type': 'bool' }],
+      'inputs': [
+        { 'name': '_to', 'type': 'address' },
+        { 'name': '_value', 'type': 'uint256' }
+      ],
+      'name': 'transfer',
+      'stateMutability': 'Nonpayable',
+      'type': 'Function'
+    }
+  ];
+  let contract = await tronWeb.contract(abi, "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t");
+  let result = await contract.balanceOf(addr).call();
+  console.log(result.toString(10));
 }
-
 async function getTrxUSDTBalance(addr: string) {
   try {
     const kv = await Deno.openKv();
@@ -936,6 +961,10 @@ router
   })
   .get("/", (context) => {
     context.response.body = { message: "CRW Interactor API is running" };
+  })
+  .get("/test_get_balance_of_trc20", async (context) => {
+    const resp = await getBalanceOfTRC20("TJDENsfBJs4RFETt1X1W8wMDc8M5XnJhCe");
+    context.response.body = resp;
   })
   .get("/set_env_password", async (context) => {
     const queryParams = context.request.url.searchParams;
