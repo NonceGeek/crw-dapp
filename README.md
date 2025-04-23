@@ -1,11 +1,11 @@
-# 🏗 CRW DApp
+# 🪶 Feather Multi Chain Wallet System
 
 <h4 align="center">
-  <a href="https://crw-leeduckgos-projects.vercel.app/"> -[ Lanuch App ]- </a>
+  <a href="TODO"> -[ Lanuch App ]- </a>
 </h4>
 
 
-🧪CRW 是一个对数据进行 CRW（create-read-write） 操作的 dApp
+🪶 Feather Multi Chain Wallet System, 基于 deno 的多链支持的钱包系统，像羽毛一样轻。
 
 &
 
@@ -14,7 +14,7 @@ It's a spec version of NonceGeek for `scaffold-eth`.
 
 ## Quickstart
 
-如果您想快速体验我们的功能请通过：<a href="https://crw-leeduckgos-projects.vercel.app/">Lanuch App</a>
+如果您想快速体验我们的功能请通过：<a href="TODO">Lanuch App</a>
 
 ## Frontend
 ### Requirements
