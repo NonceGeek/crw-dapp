@@ -606,6 +606,53 @@ console.log("Hello from CRW Interactor!");
 
 const router = new Router();
 
+// a patch to use proto in the tronWeb, see the links:
+// > https://github.com/tronprotocol/tronweb/issues/625
+// > https://github.com/denoland/deno/issues/4324#issuecomment-1874651956
+
+Object.defineProperty(Object.prototype, '__proto__', {
+  get: function() {
+      return Object.getPrototypeOf(this);
+  }
+})
+
+// Generate a new Ethereum account & save it to the kv.
+async function genAcctWithoutSavePrivKey(if_admin: boolean) {
+  const kv = await Deno.openKv();
+
+  // Generate a new random wallet
+  const wallet = ethers.Wallet.createRandom();
+  const address = wallet.address;
+  const privateKey = wallet.privateKey;
+
+  // if if_admin is true, then set the address to the admin.
+  if (if_admin) {
+    await kv.set(["acct", "eth", "admin"], address);
+  }else{
+    // Not Store the private key in the KV store
+    await kv.set(["acct", "eth", address], {});
+  }
+
+  return {
+    address,
+    privateKey,
+  };
+}
+
+async function ethGetBalances(addr: string) {
+  const network = await get_network();
+  const provider = new ethers.providers.JsonRpcProvider(
+    network.rpcUrl
+  );
+  const balance = await provider.getBalance(addr);
+  const balance_eth = ethers.utils.formatEther(balance);
+  const balance_usdt = await erc20Balance(addr, network.usdtContractAddress, network.rpcUrl);
+  return {
+    balance_eth: balance_eth.toString(),
+    balance_usdt: balance_usdt.toString()
+  };
+}
+
 // Generate a new Ethereum account & save it to the kv.
 async function genAcct() {
   const kv = await Deno.openKv();
@@ -761,7 +808,15 @@ async function getTrxTx(tx_id: string) {
   }
 } 
 async function getBalanceOfTRC20(addr: string) {
-  let tronWeb = new TronWeb({ fullHost: "https://api.trongrid.io/v1" });
+  // const tronWeb = new TronWeb({
+  //   fullNode: 'https://api.trongrid.io',
+  //   solidityNode: 'https://api.trongrid.io',
+  // })
+  let tronWeb = new TronWeb({ fullHost: "https://api.trongrid.io" });
+  
+  // set the owner address
+  tronWeb.setAddress('TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t');
+
   let abi = [
     {
       'outputs': [{ 'type': 'uint256' }],
@@ -784,7 +839,7 @@ async function getBalanceOfTRC20(addr: string) {
   ];
   let contract = await tronWeb.contract(abi, "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t");
   let result = await contract.balanceOf(addr).call();
-  console.log(result.toString(10));
+  return result.toString(10);
 }
 async function getTrxUSDTBalance(addr: string) {
   try {
@@ -931,6 +986,47 @@ async function getAccts() {
   return addresses;
 }
 
+async function eth_set_network(network: string) {
+  const kv = await Deno.openKv();
+  
+  // Map network aliases to their RPC URLs
+  const networkMap: { [key: string]: string } = {
+    "op": "https://mainnet.optimism.io",
+    "op_test": "https://sepolia.optimism.io"
+  };
+
+  const faucetMap: { [key: string]: string } = {
+    "op": "",
+    "op_test": "https://console.optimism.io/faucet"
+  };
+
+  const usdtMap: { [key: string]: string } = {
+    "op": "0x94b008aa00579c1307b0ef2c499ad98a8ce58e58",
+    "op_test": ""
+  };
+
+  // Get the RPC URL for the network
+  const rpcUrl = networkMap[network] || network;
+  const faucetUrl = faucetMap[network];
+  const usdtContractAddress = usdtMap[network];
+  
+  // Store both the network alias and RPC URL
+  await kv.set(["env", "eth", "network"], {
+    alias: network,
+    rpcUrl: rpcUrl,
+    faucetUrl: faucetUrl,
+    usdtContractAddress: usdtContractAddress
+  });
+  
+  return { message: "Network set successfully" };
+}
+
+async function get_network() {
+  const kv = await Deno.openKv();
+  const resp = await kv.get(["env", "eth", "network"]);
+  return resp.value || { alias: "op_test", rpcUrl: "https://sepolia.optimism.io", faucetUrl: "https://console.optimism.io/faucet", usdtContractAddress: "" };
+}
+
 // Configuration for your smart contract
 const contractABI = [
   // Write Functions
@@ -941,6 +1037,7 @@ const contractABI = [
   "function read_index(address addr) view returns (uint256)",
   "function read_item(address addr, uint256 index) view returns (tuple(string content, uint256 timestamp))",
 ];
+
 const contractAddress = contracts.contracts.crw.address;
 
 // Provider URL, you should replace it with your actual Optimism provider
@@ -953,6 +1050,36 @@ const provider = new ethers.providers.JsonRpcProvider(
 
 const contract = new ethers.Contract(contractAddress, contractABI, provider);
 
+async function erc20Balance(addr: string, contractAddress: string, rpcUrl: string) {
+  const provider = new ethers.providers.JsonRpcProvider(
+    rpcUrl
+  );
+  const ABI = [
+    // Read-Only Functions
+    "function balanceOf(address owner) view returns (uint256)",
+    "function decimals() view returns (uint8)",
+    "function symbol() view returns (string)",
+    "function name() view returns (string)",
+    "function totalSupply() view returns (uint256)",
+    "function allowance(address owner, address spender) view returns (uint256)",
+
+    // Authenticated Functions
+    "function transfer(address to, uint256 amount) returns (bool)",
+    "function approve(address spender, uint256 amount) returns (bool)",
+    "function transferFrom(address from, address to, uint256 amount) returns (bool)",
+
+    // Events
+    "event Transfer(address indexed from, address indexed to, uint256 value)",
+    "event Approval(address indexed owner, address indexed spender, uint256 value)"
+  ];
+  const contract = new ethers.Contract(contractAddress, ABI, provider);
+  const balance = await contract.balanceOf(addr);
+  // use decimal to convert the balance.
+  const decimals = await contract.decimals();
+  const balance_decimal = ethers.utils.formatUnits(balance, decimals);
+  return balance_decimal;
+}
+
 // TODO: set passwd to all the api about write op.
 // generate the router based on the contractABI.
 router
@@ -962,10 +1089,10 @@ router
   .get("/", (context) => {
     context.response.body = { message: "CRW Interactor API is running" };
   })
-  .get("/test_get_balance_of_trc20", async (context) => {
-    const resp = await getBalanceOfTRC20("TJDENsfBJs4RFETt1X1W8wMDc8M5XnJhCe");
-    context.response.body = resp;
-  })
+  // .get("/test_get_balance_of_trc20", async (context) => {
+  //   const resp = await getBalanceOfTRC20("TJDENsfBJs4RFETt1X1W8wMDc8M5XnJhCe");
+  //   context.response.body = resp;
+  // })
   .get("/set_env_password", async (context) => {
     const queryParams = context.request.url.searchParams;
     const password = queryParams.get("password");
@@ -988,6 +1115,56 @@ router
         context.response.body = { message: "Password set successfully" };
       }
     }
+  })
+  .get("/eth/set_network", async (context) => {
+    const queryParams = context.request.url.searchParams;
+    const network = queryParams.get("network");
+    const password = queryParams.get("password");
+
+    const kv = await Deno.openKv();
+    const passwd = await kv.get(["env","password"]);
+
+    if (password !== passwd.value) {
+      context.response.body = { error: "Invalid password" };
+      return;
+    }
+
+    const resp = await eth_set_network(network);
+    context.response.body = resp;
+  })
+  .get("/eth/get_network", async (context) => {
+    const resp = await get_network();
+    context.response.body = resp;
+  })
+  .get("/eth/acct_gen_admin", async (context) => {
+    const queryParams = context.request.url.searchParams;
+    const password = queryParams.get("password");
+    const kv = await Deno.openKv();
+    const passwd = await kv.get(["env","password"]);
+
+    if (password !== passwd.value) {
+      context.response.body = { error: "Invalid password" };
+      return;
+    }
+    const resp = await genAcctWithoutSavePrivKey(true);
+    context.response.body = resp;
+  })
+  .get("/eth/get_admin", async (context) => {
+    const kv = await Deno.openKv();
+    const admin = await kv.get(["acct", "eth", "admin"]);
+    
+    context.response.body = admin;
+  })
+  .get("/eth/acct_gen", async (context) => {
+    const resp = await genAcctWithoutSavePrivKey(false);
+    context.response.body = resp;
+  })
+  .get("/eth/balance/:addr", async (context) => {
+    const addr = context.params.addr;
+
+    const resp = await ethGetBalances(addr);
+
+    context.response.body = resp;
   })
   .get("/set_env_tron_api_url", async (context) => {
     const queryParams = context.request.url.searchParams;
