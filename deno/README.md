@@ -370,3 +370,74 @@ All endpoints return appropriate HTTP status codes:
 
 ## Authentication
 The API currently uses direct private key access for blockchain transactions. In a production environment, a more secure authentication mechanism should be implemented.
+
+## Multi-Chain Wallet System
+
+This is a lightweight recreation of an exchange's B2B wallet, implementing a Deno-based version with the following features:
+- Native currency balance query
+- Token balance query
+- Address generation (non-custodial)
+- Native currency deposit and withdrawal
+- Token deposit and withdrawal
+- Token consolidation (sweep)
+
+### Project Structure
+
+The project is organized in a modular way:
+
+```
+deno/
+├── app.ts                  # Main application entry point
+├── routes/                 # API route definitions
+│   ├── ethereum.ts         # Ethereum-related endpoints
+│   ├── tron.ts             # Tron-related endpoints
+│   ├── contract.ts         # Smart contract interaction endpoints
+│   └── misc.ts             # Miscellaneous endpoints
+├── services/               # Business logic
+│   ├── ethereum.ts         # Ethereum-related services
+│   └── tron.ts             # Tron-related services
+├── utils/                  # Helper utilities
+└── deno.json               # Deno configuration
+```
+
+### Supported Chains
+
+- EVM Chains (implemented)
+- Tron (implemented)
+- Aptos (TODO)
+- Sui (TODO)
+- Bitcoin (TODO)
+
+### Running the Application
+
+To run the application:
+
+```bash
+deno run --allow-net --allow-read --allow-env app.ts
+```
+
+Or use the included task:
+
+```bash
+deno task start
+```
+
+### API Documentation
+
+See the full API documentation in the `docs` endpoint of the running application.
+
+### Development
+
+For development, you can use the watch mode:
+
+```bash
+deno run --watch --allow-net --allow-read --allow-env app.ts
+```
+
+### Type Checking
+
+Run type checking with:
+
+```bash
+deno check app.ts
+```

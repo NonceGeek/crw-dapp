@@ -1,9 +1,17 @@
-/* export APIs to the Bodhi ecology, including the follow APIs:
-- read bodhi text assets
-- read bodhi pic assets
-- read bodhi assets sliced
-- read bodhi spaces
-- using bodhi as a auth? That may be c00l.
+/*
+Support the multiple chains, including the following chains:
+- EVM Chains
+- Tron(TODO)
+- Aptos(TODO)
+- Sui(TODO)
+- Bitcoin(TODO)
+This is a lightweight recreation of an exchange's B2B wallet, implementing a Deno-based version with the following features:
+- Native currency balance query
+- Token balance query
+- Address generation (non-custodial)
+- Native currency deposit and withdrawal
+- Token deposit and withdrawal
+- Token consolidation(sweeeeeeep)
 */
 // Follow this setup guide to integrate the Deno language server with your editor:
 // https://deno.land/manual/getting_started/setup_your_environment
@@ -42,6 +50,8 @@ const abi = [
 ];
 ```
 */
+
+
 const contracts = {
   chainId: "97",
   name: "bnbTestnet",
@@ -602,7 +612,7 @@ All endpoints return appropriate HTTP status codes:
 The API currently uses direct private key access for blockchain transactions. In a production environment, a more secure authentication mechanism should be implemented.
 `;
 
-console.log("Hello from CRW Interactor!");
+console.log("Hello from Multi-Chain Wallet System!");
 
 const router = new Router();
 
@@ -617,7 +627,10 @@ Object.defineProperty(Object.prototype, '__proto__', {
 })
 
 // Generate a new Ethereum account & save it to the kv.
-async function genAcctWithoutSavePrivKey(if_admin: boolean) {
+// Two levels of accounts:
+// 1. admin: the admin account, which is used to manage the whole wallet.
+// 2. user: the user account
+async function ethGenAcctWithoutSavePrivKey(if_admin: boolean) {
   const kv = await Deno.openKv();
 
   // Generate a new random wallet
@@ -639,6 +652,7 @@ async function genAcctWithoutSavePrivKey(if_admin: boolean) {
   };
 }
 
+
 async function ethGetBalances(addr: string) {
   const network = await get_network();
   const provider = new ethers.providers.JsonRpcProvider(
@@ -654,7 +668,7 @@ async function ethGetBalances(addr: string) {
 }
 
 // Generate a new Ethereum account & save it to the kv.
-async function genAcct() {
+async function ethGenAcct() {
   const kv = await Deno.openKv();
 
   // Generate a new random wallet
@@ -671,7 +685,7 @@ async function genAcct() {
   };
 }
 
-async function genAdmin() {
+async function ethGenAdmin() {
   const kv = await Deno.openKv();
   const adminEntries = kv.list({ prefix: ["admin"] });
 
@@ -1002,7 +1016,7 @@ async function eth_set_network(network: string) {
 
   const usdtMap: { [key: string]: string } = {
     "op": "0x94b008aa00579c1307b0ef2c499ad98a8ce58e58",
-    "op_test": ""
+    "op_test": "0x604dcaEC4E9ad55737F00D87B47ae497d2d78608"
   };
 
   // Get the RPC URL for the network
@@ -1146,7 +1160,7 @@ router
       context.response.body = { error: "Invalid password" };
       return;
     }
-    const resp = await genAcctWithoutSavePrivKey(true);
+    const resp = await ethGenAcctWithoutSavePrivKey(true);
     context.response.body = resp;
   })
   .get("/eth/get_admin", async (context) => {
@@ -1156,7 +1170,7 @@ router
     context.response.body = admin;
   })
   .get("/eth/acct_gen", async (context) => {
-    const resp = await genAcctWithoutSavePrivKey(false);
+    const resp = await ethGenAcctWithoutSavePrivKey(false);
     context.response.body = resp;
   })
   .get("/eth/balance/:addr", async (context) => {
@@ -1359,11 +1373,11 @@ router
     }
   })
   .get("/admin_gen", async (context) => {
-    const admin = await genAdmin();
+    const admin = await ethGenAdmin();
     context.response.body = admin;
   })
   .get("/acct_gen", async (context) => {
-    const acct = await genAcct();
+    const acct = await ethGenAcct();
     context.response.body = acct.address;
   })
   .post("/record_insert", async (context) => {
