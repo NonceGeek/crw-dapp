@@ -251,8 +251,8 @@ ethRouter
         await gasTx.wait();
         txHash = gasTx.hash;
         console.log("gas tx hash: ", txHash);
-        // await 2 seconds to make sure the tx success.
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // await 1 seconds to make sure the tx success.
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
 
       // Transfer all USDT to admin
