@@ -7,11 +7,26 @@
 
 🪶 Feather Multi Chain Wallet System, 基于 deno 的多链支持的钱包系统，像羽毛一样轻。
 
-# Multi-Chain Wallet System Backend
+The Full Structure:
+
+```
++---------------------------+
+| Multi Chain Wallet System |
++---------------------------+
+APIS about Priv     |      | APIs
+HTTPS&IN SAME Server|      |                 +----------+
++-------------+     |      +-----------------| Frontend |
+| Private Key |-----+      |                 +----------+
+|    Vault🏦  |            |                 +----------------+
++-------------+            +-----------------| Other Services |
+                                             +----------------+
+```
+
+## Multi-Chain Wallet System Backend
 
 A Deno-based backend service for managing multi-chain cryptocurrency wallets, supporting Ethereum and TRON networks.
 
-## Features
+### Features
 
 - Multi-chain support (Ethereum, Tron, Bitcoin, Aptos, Sui...)
 - Account management and generation
@@ -21,13 +36,13 @@ A Deno-based backend service for managing multi-chain cryptocurrency wallets, su
 - Network configuration management
 - Comprehensive API documentation
 
-## Prerequisites
+### Prerequisites
 
 - [Deno](https://deno.land/) version 1.x or higher
 - Access to Ethereum and TRON networks (mainnet/testnet)
 - Environment for secure key management
 
-## Installation
+### Installation
 
 1. Clone the repository:
 ```bash
@@ -45,7 +60,11 @@ curl -fsSL https://deno.land/x/install/install.sh | sh
 iwr https://deno.land/x/install/install.ps1 -useb | iex
 ```
 
-## Running the Server
+### Running the Server
+
+```
+cd deno
+```
 
 Start the server in development mode:
 
@@ -61,7 +80,14 @@ deno task start
 
 The server will start on port 8000 by default.
 
-## Security Considerations
+Deploy to the deno:
+
+```
+
+deployctl deploy --prod --project=[proj-name] app.ts
+```
+
+### Security Considerations
 
 ⚠️ **IMPORTANT SECURITY ADVISORY**:
 - Operations involving private keys should only be performed within internal networks for service-to-service interactions
@@ -71,43 +97,42 @@ The server will start on port 8000 by default.
 - Implement proper security measures in production environments
 - Never expose private key operations to public networks
 
-## API Overview
+### API Overview
 
 The API is organized into several sections:
 
-### System Status
+#### System Status
 - `GET /` - Check API status
 - `GET /docs` - View API documentation
 
-### Password Management
+#### Password Management
 - `GET /set_env_password` - Set/update environment password
 - `GET /check_env_password` - Verify password validity
 
-### Token Management
+#### Token Management
 - `GET /eth/add_token_address/:tokenAddress` - Add token address
 - `GET /eth/remove_token_address/:tokenAddress` - Remove token address
 
-### USDT Operations
+#### USDT Operations
 - `GET /eth/sweep/usdt` - Sweep USDT to admin address
 - `GET /eth/transfer/usdt` - Transfer USDT between addresses
 
-### Network Configuration
+#### Network Configuration
 - `GET /eth/set_network` - Set Ethereum network
-- `GET /eth/set_min_balance` - Set minimum balance threshold
-- `GET /eth/set_gas_for_sweep` - Set gas amount for sweep operations
+- `GET /eth/set_min_balance` - Set minimum balance threshold, it will be check when sweep
 
-### Account Management
-- `GET /admin_gen` - Generate admin account
-- `GET /acct_gen` - Generate new account
-- `GET /accts_get` - List all accounts
-- `GET /accts_get_with_balances` - Get accounts with balances
+#### Account Management
+- `GET /eth/acct_gen_admin` - Generate admin account
+- `GET /eth/get_admin` - Get Admin Info
+- `GET /eth/acct_gen` - Generate new account
+- `GET /eth/balances/:addr` - Get Balance of Addr
 
-### TRON Operations(TBD)
+#### TRON Operations(TBD)
 - Various endpoints for TRON address management and transactions
 
 For detailed API documentation, visit `/docs` endpoint after starting the server.
 
-## Error Handling
+#### Error Handling
 
 The API uses standard HTTP status codes:
 - 200: Success
@@ -116,9 +141,9 @@ The API uses standard HTTP status codes:
 - 404: Not found
 - 500: Server error
 
-## Development
+### Development
 
-### Project Structure
+#### Project Structure
 
 ```
 deno/
@@ -134,13 +159,13 @@ deno/
     └── utils.ts       # General utilities
 ```
 
-### Dependencies
+#### Dependencies
 
 - [Oak](https://deno.land/x/oak) - HTTP server framework
 - [CORS](https://deno.land/x/cors) - CORS middleware
 - Various blockchain-related libraries
 
-## Production Deployment
+### Production Deployment
 
 For production deployment:
 
@@ -152,7 +177,7 @@ For production deployment:
 6. Use HTTPS
 7. Regular security audits
 
-## Contributing
+### Contributing
 
 1. Fork the repository
 2. Create your feature branch
@@ -160,7 +185,7 @@ For production deployment:
 4. Push to the branch
 5. Create a new Pull Request
 
-## License
+### License
 
 MIT License
 
@@ -184,6 +209,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-# Multi-Chain Wallet System Frontend
+## Multi-Chain Wallet System Frontend
 
 TODO.
